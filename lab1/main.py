@@ -1,21 +1,14 @@
-from __future__ import annotations
-
-from gui import run_gui_application
-
+import sys
+from PyQt6.QtWidgets import QApplication
+# Импортируем класс окна из файла gui.py
+from gui import SummarizerApp
 
 def main() -> None:
-    """
-    1) Что я делаю?
-       Точка входа в приложение — запускаю GUI.
-
-    2) Что я принимаю на вход?
-       - Ничего не принимаю.
-
-    3) Что я возвращаю?
-       - Ничего не возвращаю.
-    """
-    run_gui_application()
-
+    """Точка входа в программу"""
+    app = QApplication(sys.argv)
+    window = SummarizerApp()
+    window.show()
+    sys.exit(app.exec())
 
 if __name__ == "__main__":
     main()

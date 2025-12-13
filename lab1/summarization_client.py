@@ -1,133 +1,77 @@
-from __future__ import annotations
-
 import os
-from typing import Any, Dict
-
 import requests
+from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 
+load_dotenv()
 
-class RapidApiArticleSummarizerClient:
+def _get_api_headers() -> Dict[str, str]:
+    """Вспомогательная функция для получения заголовков."""
+    api_key: Optional[str] = os.getenv("RAPIDAPI_KEY")
+    if not api_key:
+        raise ValueError("API ключ не найден. Проверьте файл .env")
+    
+    return {
+        "content-type": "application/json",
+        "X-RapidAPI-Key": api_key,
+        "X-RapidAPI-Host": "article-extractor-and-summarizer.p.rapidapi.com"
+    }
+
+def get_article_summary(url: str, sentences_count: int = 3) -> str:
     """
-    1) Что я делаю?
-       Класс инкапсулирует обращение к RapidAPI Article Extractor and Summarizer:
-       отправляет HTTP‑запрос по URL статьи и получает её краткое резюме.
+    Получает суммаризацию по URL с заданным количеством предложений.
 
-    2) Что я принимаю на вход?
-       - В конструктор: имена переменных окружения с ключом и host'ом.
-       - В summarize_article: строку с URL статьи и язык суммаризации.
-
-    3) Что я возвращаю?
-       - Метод summarize_article возвращает строку с суммаризацией статьи.
+    1) Что я делаю? Отправляю GET запрос с URL статьи и параметром длины.
+    2) Что я принимаю? Ссылку (str) и кол-во предложений (int).
+    3) Что я возвращаю? Суммаризированный текст (str).
     """
+    endpoint_url: str = "https://article-extractor-and-summarizer.p.rapidapi.com/summarize"
+    
+    # Передаем параметр length в API
+    querystring: Dict[str, str] = {
+        "url": url,
+        "lang": "ru",
+        "length": str(sentences_count) 
+    }
 
-    def __init__(
-        self,
-        api_key_env_var: str = "RAPIDAPI_KEY",
-        api_host_env_var: str = "RAPIDAPI_HOST",
-    ) -> None:
-        load_dotenv()
+    headers = _get_api_headers()
+    if "content-type" in headers:
+        del headers["content-type"]
 
-        api_key: str | None = os.getenv(api_key_env_var)
-        api_host: str | None = os.getenv(api_host_env_var)
+    response: requests.Response = requests.get(
+        endpoint_url, 
+        headers=headers, 
+        params=querystring
+    )
+    
+    response.raise_for_status()
+    data: Dict[str, Any] = response.json()
+    
+    return data.get("summary", f"Ошибка: {data}")
 
-        if api_key is None or api_key.strip() == "":
-            raise ValueError(
-                f"API‑ключ не найден в переменной окружения {api_key_env_var}"
-            )
+def get_text_summary(text: str, sentences_count: int = 3) -> str:
+    """
+    Получает суммаризацию по тексту с заданным количеством предложений.
 
-        if api_host is None or api_host.strip() == "":
-            raise ValueError(
-                f"Host API не найден в переменной окружения {api_host_env_var}"
-            )
+    1) Что я делаю? Отправляю POST запрос с текстом и параметром длины.
+    2) Что я принимаю? Текст (str) и кол-во предложений (int).
+    3) Что я возвращаю? Суммаризированный текст (str).
+    """
+    endpoint_url: str = "https://article-extractor-and-summarizer.p.rapidapi.com/summarize-text"
+    
+    payload: Dict[str, Any] = {
+        "text": text,
+        "lang": "ru",
+        "length": str(sentences_count)
+    }
 
-        self._api_key: str = api_key
-        self._api_host: str = api_host
-        # endpoint для Article Extractor and Summarizer
-        self._endpoint_url: str = (
-            "https://article-extractor-and-summarizer.p.rapidapi.com/summarize"
-        )
+    response: requests.Response = requests.post(
+        endpoint_url, 
+        json=payload, 
+        headers=_get_api_headers()
+    )
 
-    def _build_headers(self) -> Dict[str, str]:
-        """
-        1) Что я делаю?
-           Формирую HTTP‑заголовки для запроса к RapidAPI.
-
-        2) Что я принимаю на вход?
-           - Ничего не принимаю.
-
-        3) Что я возвращаю?
-           - Словарь заголовков.
-        """
-        headers: Dict[str, str] = {
-            "x-rapidapi-key": self._api_key,
-            "x-rapidapi-host": self._api_host,
-        }
-        return headers
-
-    def _build_query_params(self, article_url: str, summary_language: str) -> Dict[str, str]:
-        """
-        1) Что я делаю?
-           Формирую query‑параметры для запроса API.
-
-        2) Что я принимаю на вход?
-           - article_url: URL статьи, которую нужно извлечь и суммаризировать.
-           - summary_language: язык, на котором нужен summary (например, 'en').
-
-        3) Что я возвращаю?
-           - Словарь с query‑параметрами.
-        """
-        params: Dict[str, str] = {
-            "url": article_url,
-            "length": "3",        # пример: короткое резюме (можно менять на 'short', 'medium', 'long' — см. доку)
-            "lang": summary_language,
-        }
-        return params
-
-    def summarize_article(self, article_url: str, summary_language: str = "en") -> str:
-        """
-        1) Что я делаю?
-           Отправляю GET‑запрос к Article Extractor and Summarizer,
-           получаю JSON‑ответ и извлекаю текст суммаризации.
-
-        2) Что я принимаю на вход?
-           - article_url: строка с URL статьи.
-           - summary_language: код языка суммаризации (по умолчанию 'en').
-
-        3) Что я возвращаю?
-           - Строку с итоговой суммаризацией.
-        """
-        if not article_url.strip():
-            raise ValueError("URL статьи не может быть пустым.")
-
-        headers: Dict[str, str] = self._build_headers()
-        params: Dict[str, str] = self._build_query_params(
-            article_url=article_url,
-            summary_language=summary_language,
-        )
-
-        response: requests.Response = requests.get(
-            self._endpoint_url,
-            headers=headers,
-            params=params,
-            timeout=30,
-        )
-        response.raise_for_status()
-
-        response_data: Dict[str, Any] = response.json()
-
-        # Фактический формат ответа этого API (проверено по playground):
-        # {
-        #   "summary": "....",
-        #   "title": "....",
-        #   "url": "....",
-        #   ...
-        # }
-        summary: Any = response_data.get("summary")
-
-        if not isinstance(summary, str):
-            raise RuntimeError(
-                f"Не удалось извлечь поле 'summary' из ответа API: {response_data}"
-            )
-
-        return summary
+    response.raise_for_status()
+    data: Dict[str, Any] = response.json()
+    
+    return data.get("summary", f"Ошибка: {data}")

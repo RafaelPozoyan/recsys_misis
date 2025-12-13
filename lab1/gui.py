@@ -1,181 +1,183 @@
-from __future__ import annotations
-
-from typing import Optional
-
-from PyQt6.QtCore import Qt
+import requests
 from PyQt6.QtWidgets import (
-    QApplication,
-    QWidget,
-    QLabel,
-    QLineEdit,
-    QTextEdit,
-    QPushButton,
-    QComboBox,
-    QGridLayout,
+    QMainWindow, 
+    QWidget, 
+    QVBoxLayout, 
+    QHBoxLayout,
+    QLabel, 
+    QLineEdit, 
+    QPushButton, 
+    QTextEdit, 
     QMessageBox,
+    QTabWidget,
+    QSpinBox,
+    QApplication
 )
+from summarization_client import get_article_summary, get_text_summary
 
-from summarization_client import RapidApiArticleSummarizerClient
-
-
-class ArticleSummarizerWindow(QWidget):
-    """
-    1) Что я делаю?
-       Описываю главное окно приложения: ввод URL статьи,
-       выбор языка суммаризации, вызов API и показ результата.
-
-    2) Что я принимаю на вход?
-       - В конструктор передаётся клиент RapidApiArticleSummarizerClient.
-
-    3) Что я возвращаю?
-       - Класс ничего не возвращает, управляет GUI.
-    """
-
-    def __init__(self, summarizer_client: RapidApiArticleSummarizerClient) -> None:
+class SummarizerApp(QMainWindow):
+    def __init__(self) -> None:
         super().__init__()
+        self.init_ui()
 
-        self._summarizer_client: RapidApiArticleSummarizerClient = summarizer_client
+    def init_ui(self) -> None:
+        self.setWindowTitle("Лабораторная: Суммаризатор")
+        self.setGeometry(100, 100, 700, 600)
 
-        self._url_input: Optional[QLineEdit] = None
-        self._language_selector: Optional[QComboBox] = None
-        self._summary_output: Optional[TTextEdit] = None  # type: ignore[name-defined]
-        self._summarize_button: Optional[QPushButton] = None
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        
+        # Основной вертикальный макет
+        main_layout = QVBoxLayout()
 
-        self._initialize_ui()
+        # Вкладки
+        self.tabs = QTabWidget()
+        
+        self.tab_url = QWidget()
+        self.tab_text = QWidget()
+        
+        self.tabs.addTab(self.tab_url, "По ссылке (URL)")
+        self.tabs.addTab(self.tab_text, "По тексту")
+        
+        self.setup_url_tab()
+        self.setup_text_tab()
+        
+        main_layout.addWidget(self.tabs)
 
-    def _initialize_ui(self) -> None:
+        # Результат
+        self.result_label = QLabel("Результат (Summary):")
+        main_layout.addWidget(self.result_label)
+
+        self.result_area = QTextEdit()
+        self.result_area.setReadOnly(True)
+        self.result_area.setStyleSheet("background-color: #2b2b2b; color: #ffffff; border: 1px solid #555;") # Темная тема совместимость
+        main_layout.addWidget(self.result_area)
+
+        central_widget.setLayout(main_layout)
+
+    def _create_length_selector(self) -> tuple[QWidget, QSpinBox]:
         """
-        1) Что я делаю?
-           Создаю и настраиваю все элементы интерфейса (поля, кнопки, подписи, layout).
-
-        2) Что я принимаю на вход?
-           - Ничего не принимаю.
-
-        3) Что я возвращаю?
-           - Ничего не возвращаю.
+        Создает панель с выбором количества предложений.
         """
-        self.setWindowTitle("Article Extractor and Summarizer (RapidAPI)")
-        self.setMinimumSize(800, 400)
+        container = QWidget()
+        layout = QHBoxLayout()
+        # Убираем отступы внутри контейнера, чтобы он не занимал лишнее место
+        layout.setContentsMargins(0, 5, 0, 5) 
+        
+        label = QLabel("Кол-во предложений:")
+        spin_box = QSpinBox()
+        spin_box.setRange(1, 10) 
+        spin_box.setValue(3) 
+        
+        layout.addWidget(label)
+        layout.addWidget(spin_box)
+        layout.addStretch() # Прижимаем спинбокс влево
+        
+        container.setLayout(layout)
+        return container, spin_box
 
-        layout: QGridLayout = QGridLayout()
-        self.setLayout(layout)
+    def setup_url_tab(self) -> None:
+        layout = QVBoxLayout()
+        
+        self.url_label = QLabel("Введите URL статьи:")
+        self.url_input = QLineEdit()
+        self.url_input.setPlaceholderText("https://example.com/article")
+        
+        length_widget, self.url_len_spin = self._create_length_selector()
+        
+        self.btn_url = QPushButton("Суммаризировать URL")
+        self.btn_url.clicked.connect(self.on_url_click)
+        # Сделаем кнопку немного выше (по желанию)
+        self.btn_url.setMinimumHeight(40)
 
-        url_label: QLabel = QLabel("URL статьи:")
-        url_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(self.url_label)
+        layout.addWidget(self.url_input)
+        layout.addWidget(length_widget)
+        layout.addWidget(self.btn_url)
+        
+        # Этот стрейч заполнит пустое место ВНИЗУ вкладки, поджимая элементы вверх
+        layout.addStretch() 
+        
+        self.tab_url.setLayout(layout)
 
-        self._url_input = QLineEdit()
-        self._url_input.setPlaceholderText("Вставьте ссылку на новость или статью...")
+    def setup_text_tab(self) -> None:
+        layout = QVBoxLayout()
+        
+        self.text_label = QLabel("Вставьте текст статьи:")
+        self.text_input = QTextEdit()
+        self.text_input.setPlaceholderText("Скопируйте сюда текст...")
+        
+        length_widget, self.text_len_spin = self._create_length_selector()
+        
+        self.btn_text = QPushButton("Суммаризировать Текст")
+        self.btn_text.clicked.connect(self.on_text_click)
+        self.btn_text.setMinimumHeight(40)
 
-        language_label: QLabel = QLabel("Язык суммаризации:")
+        layout.addWidget(self.text_label)
+        layout.addWidget(self.text_input)
+        layout.addWidget(length_widget)
+        layout.addWidget(self.btn_text)
+        
+        # Здесь addStretch не нужен, так как QTextEdit сам растягивается
+        
+        self.tab_text.setLayout(layout)
 
-        self._language_selector = QComboBox()
-        # Этот API умеет переводить summary — оставим базовый набор
-        self._language_selector.addItem("Английский (en)", "en")
-        self._language_selector.addItem("Испанский (es)", "es")
-        self._language_selector.addItem("Французский (fr)", "fr")
-        self._language_selector.addItem("Немецкий (de)", "de")
+    def _lock_ui(self, is_locked: bool) -> None:
+        self.btn_url.setEnabled(not is_locked)
+        self.btn_text.setEnabled(not is_locked)
+        
+        if is_locked:
+            self.result_area.setText("Загрузка... Пожалуйста, подождите.")
+            self.btn_url.setText("Обработка...")
+            self.btn_text.setText("Обработка...")
+        else:
+            self.btn_url.setText("Суммаризировать URL")
+            self.btn_text.setText("Суммаризировать Текст")
 
-        self._summarize_button = QPushButton("Извлечь и суммаризировать")
-        self._summarize_button.clicked.connect(self._on_summarize_clicked)
+    def on_url_click(self) -> None:
+        url: str = self.url_input.text().strip()
+        length: int = self.url_len_spin.value()
 
-        summary_label: QLabel = QLabel("Результат суммаризации:")
-        summary_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-
-        self._summary_output = QTextEdit()
-        self._summary_output.setReadOnly(True)
-        self._summary_output.setPlaceholderText("Здесь появится краткое содержание статьи.")
-
-        layout.addWidget(url_label, 0, 0)
-        layout.addWidget(self._url_input, 0, 1, 1, 2)
-
-        layout.addWidget(language_label, 1, 0)
-        layout.addWidget(self._language_selector, 1, 1)
-
-        layout.addWidget(self._summarize_button, 1, 2)
-
-        layout.addWidget(summary_label, 2, 0, 1, 3)
-        layout.addWidget(self._summary_output, 3, 0, 1, 3)
-
-    def _show_error_message(self, message: str) -> None:
-        """
-        1) Что я делаю?
-           Показываю окно с ошибкой.
-
-        2) Что я принимаю на вход?
-           - message: текст ошибки.
-
-        3) Что я возвращаю?
-           - Ничего не возвращаю.
-        """
-        box: QMessageBox = QMessageBox(self)
-        box.setIcon(QMessageBox.Icon.Critical)
-        box.setWindowTitle("Ошибка")
-        box.setText(message)
-        box.exec()
-
-    def _on_summarize_clicked(self) -> None:
-        """
-        1) Что я делаю?
-           Обрабатываю нажатие кнопки: беру URL и язык, вызываю API, вывожу summary.
-
-        2) Что я принимаю на вход?
-           - Ничего не принимаю (использую виджеты окна).
-
-        3) Что я возвращаю?
-           - Ничего не возвращаю; обновляю интерфейс.
-        """
-        if (
-            self._url_input is None
-            or self._summary_output is None
-            or self._language_selector is None
-            or self._summarize_button is None
-        ):
-            self._show_error_message("Элементы интерфейса не инициализированы.")
+        if not url:
+            QMessageBox.warning(self, "Ошибка", "Введите URL!")
             return
-
-        article_url: str = self._url_input.text().strip()
-        if not article_url:
-            self._show_error_message("Пожалуйста, введите URL статьи.")
-            return
-
-        current_language_index: int = self._language_selector.currentIndex()
-        summary_language: str = str(
-            self._language_selector.itemData(current_language_index)
-        )
-
-        self._summarize_button.setEnabled(False)
-        self._summarize_button.setText("Обработка...")
-
+        
+        self._lock_ui(True)
+        # Принудительно обновляем интерфейс перед тяжелой задачей
+        QApplication.processEvents()
+        
         try:
-            summary: str = self._summarizer_client.summarize_article(
-                article_url=article_url,
-                summary_language=summary_language,
-            )
-            self._summary_output.setPlainText(summary)
-        except Exception as error:
-            self._show_error_message(f"Ошибка при обращении к API: {error}")
+            summary = get_article_summary(url, length)
+            self.result_area.setText(summary)
+        except Exception as e:
+            self.handle_error(e)
         finally:
-            self._summarize_button.setEnabled(True)
-            self._summarize_button.setText("Извлечь и суммаризировать")
+            self._lock_ui(False)
 
+    def on_text_click(self) -> None:
+        text: str = self.text_input.toPlainText().strip()
+        length: int = self.text_len_spin.value() 
 
-def run_gui_application() -> None:
-    """
-    1) Что я делаю?
-       Создаю приложение PyQt6, инициализирую клиент RapidAPI и открываю окно суммаризации.
+        if not text:
+            QMessageBox.warning(self, "Ошибка", "Введите текст!")
+            return
 
-    2) Что я принимаю на вход?
-       - Ничего не принимаю.
+        self._lock_ui(True)
+        QApplication.processEvents()
+        
+        try:
+            summary = get_text_summary(text, length)
+            self.result_area.setText(summary)
+        except Exception as e:
+            self.handle_error(e)
+        finally:
+            self._lock_ui(False)
 
-    3) Что я возвращаю?
-       - Ничего не возвращаю; функция блокируется до закрытия окна.
-    """
-    import sys
-
-    app: QApplication = QApplication(sys.argv)
-
-    client: RapidApiArticleSummarizerClient = RapidApiArticleSummarizerClient()
-    window: ArticleSummarizerWindow = ArticleSummarizerWindow(summarizer_client=client)
-    window.show()
-
-    sys.exit(app.exec())
+    def handle_error(self, error: Exception) -> None:
+        self.result_area.clear()
+        if isinstance(error, requests.exceptions.HTTPError):
+            QMessageBox.critical(self, "Ошибка API", f"HTTP Error: {error}")
+        elif isinstance(error, ValueError):
+            QMessageBox.critical(self, "Ошибка .env", str(error))
+        else:
+            QMessageBox.critical(self, "Ошибка", f"Произошло что-то странное: {error}")
