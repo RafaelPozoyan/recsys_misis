@@ -15,7 +15,6 @@ from summarization_client import get_article_summary, get_text_summary
 
 
 class SummarizerApp(QMainWindow):
-    # Константы
     WINDOW_TITLE = "Суммаризатор | Позоян Р.О. | БПМ-22-ПО-3"
     WINDOW_SIZE = (1000, 600)
     DEFAULT_SUMMARY_LENGTH = 1
@@ -30,16 +29,13 @@ class SummarizerApp(QMainWindow):
         self.setWindowTitle(self.WINDOW_TITLE)
         self.resize(*self.WINDOW_SIZE)
 
-        # Основной контейнер
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
 
-        # Вкладки
         self.tabs_widget = QTabWidget()
         main_layout.addWidget(self.tabs_widget)
 
-        # Инициализация страниц
         self.url_tab = QWidget()
         self.text_tab = QWidget()
 
@@ -58,6 +54,7 @@ class SummarizerApp(QMainWindow):
         layout = QVBoxLayout(self.url_tab)
 
         self.url_input = QLineEdit()
+        self.url_input.setText("https://ria.ru/20251020/vvp-2049278815.html")
         self.btn_process_url = QPushButton("Обработать данные по ссылке")
         self.btn_process_url.setMinimumHeight(40)
         self.btn_process_url.clicked.connect(self.on_url_click)
@@ -85,7 +82,7 @@ class SummarizerApp(QMainWindow):
         url = self.url_input.text().strip()
         if not url:
             QMessageBox.warning(self, "Ошибка", "Введите ссылку")
-            return
+            return None
 
         QApplication.processEvents()
         try:
@@ -99,7 +96,7 @@ class SummarizerApp(QMainWindow):
         text = self.text_input.toPlainText().strip()
         if not text:
             QMessageBox.warning(self, "Ошибка", "Введите текст")
-            return
+            return None
 
         QApplication.processEvents()
         try:

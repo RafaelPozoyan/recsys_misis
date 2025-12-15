@@ -1,7 +1,6 @@
 import sys
 from PyQt6.QtWidgets import QApplication
 
-# Импортируем класс окна из файла gui.py
 from gui import SummarizerApp
 
 

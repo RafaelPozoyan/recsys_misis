@@ -37,7 +37,6 @@ def get_article_summary(url: str, sentences_count: int = 1) -> str:
         "https://article-extractor-and-summarizer.p.rapidapi.com/summarize"
     )
 
-    # Передаем параметр length в API
     querystring: Dict[str, str] = {
         "url": url,
         "lang": "ru",
