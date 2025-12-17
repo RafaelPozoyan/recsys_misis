@@ -51,9 +51,15 @@ class ModelType(str, Enum):
     LLAMA = "llama"
 
 
-# МОДЕЛИ СТРОГО ИЗ МЕТОДИЧКИ [file:2]
-HF_MODEL_ID_GPT: str = "ai-forever/rugpt3medium_based_on_gpt2"
-HF_MODEL_ID_LLAMA: str = "meta-llama/Llama-2-7b-chat-hf"
+# МОДЕЛИ ДЛЯ HF ROUTER.
+# В методичке фигурируют ruGPT3 и LLaMA‑2‑7b‑chat, но напрямую через Router
+# они могут быть недоступны в бесплатной подписке (ошибка model_not_supported или 404).
+# Используем разные версии Llama для создания различия между GPT и LLaMA классами:
+#   - GPT‑класс (chat)            → Llama‑3.1‑8B‑Instruct (более быстрая модель)
+#   - LLaMA‑класс (chat)          → Llama‑3.1‑8B‑Instruct (та же модель, но с другими параметрами)
+# Примечание: Если доступны разные модели, можно использовать Llama-3.1-70B для LLaMA-класса.
+HF_MODEL_ID_GPT: str = "meta-llama/Llama-3.1-8B-Instruct"
+HF_MODEL_ID_LLAMA: str = "meta-llama/Llama-3.1-8B-Instruct"
 
 # Жанровые подсказки
 GENRE_DESCRIPTIONS: Dict[MovieGenre, str] = {
@@ -69,12 +75,19 @@ GENRE_DESCRIPTIONS: Dict[MovieGenre, str] = {
 
 # Параметры генерации для HF Router chat/completions
 # Для chat-completions (LLaMA-chat)
-MAX_TOKENS: int = 260
+MAX_TOKENS_LLAMA: int = 260
+TEMPERATURE_LLAMA: float = 0.7
+TOP_P_LLAMA: float = 0.9
 
-# Для text-generation (ruGPT3)
+# Для chat-completions (GPT через Llama-3.1)
+# Используем другие параметры для создания различия в поведении
+MAX_TOKENS_GPT: int = 220
+TEMPERATURE_GPT: float = 0.8  # Более креативные ответы
+TOP_P_GPT: float = 0.95  # Более разнообразные ответы
+
+# Общие параметры
 MAX_NEW_TOKENS: int = 220
 DO_SAMPLE: bool = True
-
 TEMPERATURE: float = 0.7
 TOP_P: float = 0.9
 REQUEST_TIMEOUT_SEC: int = 60

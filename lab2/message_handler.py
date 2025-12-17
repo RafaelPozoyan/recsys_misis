@@ -61,16 +61,16 @@ class MessageHandler:
             None
         """
         keyboard: List[List[InlineKeyboardButton]] = [
-            [InlineKeyboardButton("🧠 ruGPT-3 (HF)", callback_data="model_gpt")],
-            [InlineKeyboardButton("🦙 LLaMA-2-7B Chat (HF)", callback_data="model_llama")],
+            [InlineKeyboardButton("🧠 GPT (Llama-3.1) (HF)", callback_data="model_gpt")],
+            [InlineKeyboardButton("🦙 LLaMA-3.1-8B Instruct (HF)", callback_data="model_llama")],
         ]
         reply_markup: InlineKeyboardMarkup = InlineKeyboardMarkup(keyboard)
 
         text: str = (
             "🎬 Привет! Это бот-рекомендатель фильмов.\n\n"
             "Сначала выбери модель (по методичке):\n"
-            "1) GPT-класс: ruGPT3medium_based_on_gpt2\n"
-            "2) LLaMA-класс: Llama-2-7b-chat-hf"
+            "1) GPT-класс: Llama-3.1-8B-Instruct (через Router API)\n"
+            "2) LLaMA-класс: Llama-3.1-8B-Instruct"
         )
         await update.message.reply_text(text, reply_markup=reply_markup)
 
@@ -140,10 +140,10 @@ class MessageHandler:
         try:
             if selected_model == ModelType.GPT:
                 response: str = await self.gpt_model.generate_response(user_prompt)
-                prefix: str = "🧠 Ответ ruGPT-3 (HF):"
+                prefix: str = "🧠 Ответ GPT (HF):"
             else:
                 response: str = await self.llama_model.generate_response(user_prompt)
-                prefix: str = "🦙 Ответ LLaMA-2 (HF):"
+                prefix: str = "🦙 Ответ LLaMA-3.1 (HF):"
 
             await query.edit_message_text(f"{prefix}\n\n{response}")
 

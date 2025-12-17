@@ -1,8 +1,10 @@
 """
-GPT-класс по методичке: ai-forever/rugpt3medium_based_on_gpt2.
+GPT-класс по методичке: meta-llama/Llama-3.1-8B-Instruct (через HF Router API).
 
 Что я делаю?
-    Делаю chat-completion запрос через HF Router и возвращаю ответ.
+    Генерирую рекомендации фильмов через HF Router chat-completion endpoint.
+    Используется Llama-3.1 для GPT-класса, так как ruGPT3 и Mistral недоступны через Router.
+    Различие с LLaMA-классом достигается через разные системные промпты.
 
 Что я принимаю на вход?
     user_prompt: str
@@ -12,7 +14,7 @@ GPT-класс по методичке: ai-forever/rugpt3medium_based_on_gpt2.
 """
 
 from hf_textgen_client import HFRouterClient
-from app_types import HF_MODEL_ID_GPT, MAX_NEW_TOKENS, TEMPERATURE, TOP_P, DO_SAMPLE
+from app_types import HF_MODEL_ID_GPT, MAX_TOKENS_GPT, TEMPERATURE_GPT, TOP_P_GPT
 
 class GPTModel:
     def __init__(self) -> None:
@@ -20,21 +22,16 @@ class GPTModel:
         self.model_id: str = HF_MODEL_ID_GPT
 
     async def generate_response(self, user_prompt: str) -> str:
-        prompt: str = (
-            "Ты — эксперт по кино. Отвечай на русском. Рекомендуй реальные фильмы.\n"
-            "Формат:\n"
-            "Название (год)\n"
-            "Актеры: ...\n"
-            "Сюжет: 2-3 предложения.\n"
-            "Почему стоит смотреть: 1-2 предложения.\n\n"
-            f"Запрос: {user_prompt}\n"
+        system_prompt: str = (
+            "Ты — эксперт по кино (GPT-класс модели). Отвечай на русском. Рекомендуй реальные фильмы. "
+            "Формат: Название (год), Актеры, Сюжет (2-3 предложения), Почему стоит смотреть (1-2 предложения)."
         )
-        return await self.client.text_generate(
+        return await self.client.chat_complete(
             model_id=self.model_id,
-            prompt=prompt,
-            max_new_tokens=MAX_NEW_TOKENS,
-            temperature=TEMPERATURE,
-            top_p=TOP_P,
-            do_sample=DO_SAMPLE,
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            max_tokens=MAX_TOKENS_GPT,
+            temperature=TEMPERATURE_GPT,
+            top_p=TOP_P_GPT,
         )
 

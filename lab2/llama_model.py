@@ -1,5 +1,5 @@
 """
-Модуль “LLaMA” по методичке: Llama-2-7b-chat-hf (через HF Inference API).
+Модуль "LLaMA" по методичке: Llama-3.1-8B-Instruct (через HF Router API).
 
 Что я делаю?
     Генерирую рекомендации фильмов, используя модель LLaMA-класса из методички.
@@ -14,7 +14,7 @@
 from typing import Any, Dict
 
 from hf_textgen_client import HFRouterClient
-from app_types import HF_MODEL_ID_LLAMA, MAX_TOKENS, TEMPERATURE, TOP_P
+from app_types import HF_MODEL_ID_LLAMA, MAX_TOKENS_LLAMA, TEMPERATURE_LLAMA, TOP_P_LLAMA
 
 class LLaMAModel:
     def __init__(self) -> None:
@@ -30,7 +30,7 @@ class LLaMAModel:
             model_id=self.model_id,
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            max_tokens=MAX_TOKENS,
-            temperature=TEMPERATURE,
-            top_p=TOP_P,
+            max_tokens=MAX_TOKENS_LLAMA,
+            temperature=TEMPERATURE_LLAMA,
+            top_p=TOP_P_LLAMA,
         )

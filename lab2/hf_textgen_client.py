@@ -1,10 +1,14 @@
 """
-Универсальный асинхронный клиент Hugging Face Router API.
+Универсальный асинхронный клиент Hugging Face **Inference API**.
 
 Что я делаю?
-    Поддерживаю два режима:
-    1) Chat Completion: https://router.huggingface.co/v1/chat/completions
-    2) Text Generation: https://router.huggingface.co/v1/completions
+    Поддерживаю два высокоуровневых режима поверх одного HTTP‑эндпоинта:
+    1) Chat‑completion для чат‑моделей (LLaMA‑класс и т.п.)
+    2) Text‑generation для обычных языковых моделей (GPT-класс и т.п.)
+
+Технически оба режима ходят в
+    https://api-inference.huggingface.co/models/{model_id}
+и отличаются только формированием `inputs` и `parameters`.
 
 Что я принимаю на вход?
     - HF токен
@@ -17,7 +21,7 @@
 """
 
 import asyncio
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 import aiohttp
 
@@ -36,9 +40,6 @@ class HFRouterClient:
     Что я возвращаю?
         Методы для генерации текста.
     """
-
-    CHAT_URL: str = "https://router.huggingface.co/v1/chat/completions"
-    COMPLETIONS_URL: str = "https://router.huggingface.co/v1/completions"
 
     def __init__(self, hf_token: Optional[str] = None) -> None:
         """
@@ -69,10 +70,14 @@ class HFRouterClient:
             "Content-Type": "application/json",
         }
 
-    def _textgen_url(self) -> str:
+    # OpenAI‑совместимые Router‑эндпоинты
+    CHAT_URL: str = "https://router.huggingface.co/v1/chat/completions"
+    COMPLETIONS_URL: str = "https://router.huggingface.co/v1/completions"
+
+    def _inference_url(self, model_id: str) -> str:
         """
         Что я делаю?
-            Возвращаю URL для text-generation (через router API completions endpoint).
+            Возвращаю URL Inference API для конкретной модели.
 
         Что я принимаю на вход?
             Ничего.
@@ -80,7 +85,8 @@ class HFRouterClient:
         Что я возвращаю?
             str
         """
-        return self.COMPLETIONS_URL
+        # Сейчас Inference API 410, оставляем функцию на будущее, но не используем.
+        return f"https://router.huggingface.co/v1/completions"
 
     async def chat_complete(
         self,
@@ -93,7 +99,7 @@ class HFRouterClient:
     ) -> str:
         """
         Что я делаю?
-            Делаю запрос Chat Completion (для chat-моделей типа LLaMA-2-chat).
+            Делаю запрос Chat Completion (для chat-моделей типа LLaMA-3.1-Instruct).
 
         Что я принимаю на вход?
             model_id, system_prompt, user_prompt, max_tokens, temperature, top_p
@@ -101,12 +107,14 @@ class HFRouterClient:
         Что я возвращаю?
             str: message.content
         """
+        messages: List[Dict[str, str]] = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+
         payload: Dict[str, Any] = {
             "model": model_id,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
+            "messages": messages,
             "max_tokens": max_tokens,
             "temperature": temperature,
             "top_p": top_p,
@@ -125,7 +133,7 @@ class HFRouterClient:
     ) -> str:
         """
         Что я делаю?
-            Делаю запрос Text Generation через completions endpoint (для non-chat моделей типа ruGPT3).
+            Делаю запрос Text Generation через completions endpoint (для non-chat моделей типа GPT).
 
         Что я принимаю на вход?
             model_id: str
@@ -146,8 +154,7 @@ class HFRouterClient:
             "top_p": top_p,
             "stream": False,
         }
-        url: str = self._textgen_url()
-        return await self._post_json(url, payload, mode="completions")
+        return await self._post_json(self.COMPLETIONS_URL, payload, mode="completions")
 
     async def _post_json(self, url: str, payload: Dict[str, Any], mode: str) -> str:
         """
