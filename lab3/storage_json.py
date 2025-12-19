@@ -79,7 +79,9 @@ def upsert_rating(
             updated_ratings.append((user_id, item_id, rating))
             was_updated = True
         else:
-            updated_ratings.append((existing_user_id, existing_item_id, existing_rating))
+            updated_ratings.append(
+                (existing_user_id, existing_item_id, existing_rating)
+            )
 
     if not was_updated:
         updated_ratings.append((user_id, item_id, rating))

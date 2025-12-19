@@ -500001,7 +500001,57 @@
   },
   {
     "user_id": 471230556,
-    "item_id": 223,
+    "item_id": 123,
+    "rating": 4.0
+  },
+  {
+    "user_id": 471230556,
+    "item_id": 35,
+    "rating": 1.0
+  },
+  {
+    "user_id": 471230556,
+    "item_id": 67,
+    "rating": 3.0
+  },
+  {
+    "user_id": 471230556,
+    "item_id": 300,
+    "rating": 5.0
+  },
+  {
+    "user_id": 471230556,
+    "item_id": 900,
+    "rating": 2.0
+  },
+  {
+    "user_id": 471230556,
+    "item_id": 120,
+    "rating": 3.0
+  },
+  {
+    "user_id": 471230556,
+    "item_id": 750,
+    "rating": 3.0
+  },
+  {
+    "user_id": 471230556,
+    "item_id": 749,
+    "rating": 3.0
+  },
+  {
+    "user_id": 2007560961,
+    "item_id": 7,
+    "rating": 1.0
+  },
+  {
+    "user_id": 2007560961,
+    "item_id": 3,
+    "rating": 1.0
+  },
+  {
+    "user_id": 2007560961,
+    "item_id": 6,
     "rating": 1.0
   }
 ]

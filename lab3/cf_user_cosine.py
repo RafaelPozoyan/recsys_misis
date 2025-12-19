@@ -22,7 +22,9 @@ def calculate_cosine_similarity(
     Что я возвращаю?
         Значение косинусного сходства в диапазоне [0..1] (в этом контексте).
     """
-    common_item_ids: set[int] = set(ratings_vector_a.keys()) & set(ratings_vector_b.keys())
+    common_item_ids: set[int] = set(ratings_vector_a.keys()) & set(
+        ratings_vector_b.keys()
+    )
     if not common_item_ids:
         return 0.0
 
@@ -53,6 +55,7 @@ class Recommendation:
     Что я возвращаю?
         Экземпляр Recommendation.
     """
+
     item_id: int
     score: float
 
@@ -92,7 +95,9 @@ class UserBasedCosineCF:
         """
         return self.user_item_ratings.get(user_id, {})
 
-    def find_similar_users(self, target_user_id: int, top_k: int) -> List[Tuple[int, float]]:
+    def find_similar_users(
+        self, target_user_id: int, top_k: int
+    ) -> List[Tuple[int, float]]:
         """
         Что я делаю?
             Ищу top_k самых похожих пользователей на target_user_id по cosine similarity.
@@ -143,7 +148,9 @@ class UserBasedCosineCF:
         if not target_vector:
             return []
 
-        neighbors: List[Tuple[int, float]] = self.find_similar_users(target_user_id, top_k=neighbors_k)
+        neighbors: List[Tuple[int, float]] = self.find_similar_users(
+            target_user_id, top_k=neighbors_k
+        )
 
         rated_item_ids: set[int] = set(target_vector.keys())
         weighted_sum_by_item: Dict[int, float] = {}
@@ -158,8 +165,13 @@ class UserBasedCosineCF:
                 if item_id in rated_item_ids:
                     continue
 
-                weighted_sum_by_item[item_id] = weighted_sum_by_item.get(item_id, 0.0) + neighbor_rating * similarity
-                weight_sum_by_item[item_id] = weight_sum_by_item.get(item_id, 0.0) + similarity
+                weighted_sum_by_item[item_id] = (
+                    weighted_sum_by_item.get(item_id, 0.0)
+                    + neighbor_rating * similarity
+                )
+                weight_sum_by_item[item_id] = (
+                    weight_sum_by_item.get(item_id, 0.0) + similarity
+                )
 
         recommendations: List[Recommendation] = []
         for item_id, weighted_sum in weighted_sum_by_item.items():
