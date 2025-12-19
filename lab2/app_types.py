@@ -26,6 +26,7 @@ class MovieGenre(str, Enum):
     Что я возвращаю?
         Значения жанров (str).
     """
+
     DRAMA = "🎭 Драма"
     DETECTIVE = "🔍 Детектив"
     COMEDY = "🎬 Комедия"
@@ -47,6 +48,7 @@ class ModelType(str, Enum):
     Что я возвращаю?
         Идентификаторы типа модели.
     """
+
     GPT = "gpt"
     LLAMA = "llama"
 
@@ -91,4 +93,3 @@ DO_SAMPLE: bool = True
 TEMPERATURE: float = 0.7
 TOP_P: float = 0.9
 REQUEST_TIMEOUT_SEC: int = 60
-

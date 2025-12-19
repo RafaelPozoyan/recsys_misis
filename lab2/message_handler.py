@@ -48,7 +48,9 @@ class MessageHandler:
         self.llama_model: LLaMAModel = LLaMAModel()
         self.user_choices: Dict[int, Dict[str, str]] = {}
 
-    async def start_command_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    async def start_command_handler(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """
         Что я делаю?
             Приветствую и предлагаю выбрать модель.
@@ -61,8 +63,16 @@ class MessageHandler:
             None
         """
         keyboard: List[List[InlineKeyboardButton]] = [
-            [InlineKeyboardButton("🧠 GPT (Llama-3.1) (HF)", callback_data="model_gpt")],
-            [InlineKeyboardButton("🦙 LLaMA-3.1-8B Instruct (HF)", callback_data="model_llama")],
+            [
+                InlineKeyboardButton(
+                    "🧠 GPT (Llama-3.1) (HF)", callback_data="model_gpt"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "🦙 LLaMA-3.1-8B Instruct (HF)", callback_data="model_llama"
+                )
+            ],
         ]
         reply_markup: InlineKeyboardMarkup = InlineKeyboardMarkup(keyboard)
 
@@ -74,7 +84,9 @@ class MessageHandler:
         )
         await update.message.reply_text(text, reply_markup=reply_markup)
 
-    async def handle_model_selection(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    async def handle_model_selection(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """
         Что я делаю?
             Сохраняю выбранную модель и предлагаю выбрать жанр.
@@ -97,7 +109,8 @@ class MessageHandler:
 
         genres: List[MovieGenre] = list(MovieGenre)
         keyboard: List[List[InlineKeyboardButton]] = [
-            [InlineKeyboardButton(g.value, callback_data=f"genre_{g.name.lower()}")] for g in genres
+            [InlineKeyboardButton(g.value, callback_data=f"genre_{g.name.lower()}")]
+            for g in genres
         ]
 
         await query.edit_message_text(
@@ -105,7 +118,9 @@ class MessageHandler:
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
 
-    async def handle_genre_selection(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    async def handle_genre_selection(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """
         Что я делаю?
             Сохраняю жанр, формирую промпт и вызываю выбранную HF-модель асинхронно.
@@ -129,7 +144,9 @@ class MessageHandler:
         self.user_choices.setdefault(user_id, {})["genre"] = selected_genre.value
         selected_model: str = self.user_choices[user_id].get("model", ModelType.GPT)
 
-        await query.edit_message_text("⏳ Генерирую рекомендацию через Hugging Face Inference API...")
+        await query.edit_message_text(
+            "⏳ Генерирую рекомендацию через Hugging Face Inference API..."
+        )
 
         genre_desc: str = GENRE_DESCRIPTIONS[selected_genre]
         user_prompt: str = (
@@ -150,7 +167,9 @@ class MessageHandler:
         except Exception as e:
             await query.edit_message_text(f"❌ Ошибка генерации: {e}")
 
-    async def help_command_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    async def help_command_handler(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """
         Что я делаю?
             Показываю справку по боту.

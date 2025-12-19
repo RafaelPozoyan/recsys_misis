@@ -16,6 +16,7 @@ GPT-класс по методичке: meta-llama/Llama-3.1-8B-Instruct (чер
 from hf_textgen_client import HFRouterClient
 from app_types import HF_MODEL_ID_GPT, MAX_TOKENS_GPT, TEMPERATURE_GPT, TOP_P_GPT
 
+
 class GPTModel:
     def __init__(self) -> None:
         self.client: HFRouterClient = HFRouterClient()
@@ -34,4 +35,3 @@ class GPTModel:
             temperature=TEMPERATURE_GPT,
             top_p=TOP_P_GPT,
         )
-

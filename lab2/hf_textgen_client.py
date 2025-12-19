@@ -169,16 +169,22 @@ class HFRouterClient:
         Что я возвращаю?
             str
         """
-        timeout: aiohttp.ClientTimeout = aiohttp.ClientTimeout(total=REQUEST_TIMEOUT_SEC)
+        timeout: aiohttp.ClientTimeout = aiohttp.ClientTimeout(
+            total=REQUEST_TIMEOUT_SEC
+        )
 
         try:
             async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.post(url, headers=self._headers(), json=payload) as resp:
+                async with session.post(
+                    url, headers=self._headers(), json=payload
+                ) as resp:
                     if resp.status == 503:
                         data_503: Any = await resp.json()
                         wait_time: float = float(data_503.get("estimated_time", 8.0))
                         await asyncio.sleep(wait_time)
-                        async with session.post(url, headers=self._headers(), json=payload) as resp2:
+                        async with session.post(
+                            url, headers=self._headers(), json=payload
+                        ) as resp2:
                             return await self._parse(resp2, mode)
 
                     return await self._parse(resp, mode)
@@ -216,9 +222,7 @@ class HFRouterClient:
 
         # mode == "completions" (для text generation)
         if mode == "completions":
-            content: Optional[str] = (
-                data.get("choices", [{}])[0].get("text")
-            )
+            content: Optional[str] = data.get("choices", [{}])[0].get("text")
             if content is not None:
                 return content.strip()
             raise RuntimeError(f"Неожиданный формат completions-ответа: {data}")

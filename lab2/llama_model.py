@@ -14,7 +14,13 @@
 from typing import Any, Dict
 
 from hf_textgen_client import HFRouterClient
-from app_types import HF_MODEL_ID_LLAMA, MAX_TOKENS_LLAMA, TEMPERATURE_LLAMA, TOP_P_LLAMA
+from app_types import (
+    HF_MODEL_ID_LLAMA,
+    MAX_TOKENS_LLAMA,
+    TEMPERATURE_LLAMA,
+    TOP_P_LLAMA,
+)
+
 
 class LLaMAModel:
     def __init__(self) -> None:
