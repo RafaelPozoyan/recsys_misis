@@ -1,14 +1,6 @@
 """
-Обработка сообщений Telegram-бота (выбор модели и жанра).
-
-Что я делаю?
-    Веду диалог: /start -> выбор модели -> выбор жанра -> генерация ответа.
-
-Что я принимаю на вход?
-    Update, Context (telegram.ext)
-
-Что я возвращаю?
-    None (отправляю сообщения пользователю).
+Обработка сообщений бота - выбор модели и жанра
+/start -> выбор модели -> выбор жанра -> генерация ответа.
 """
 
 from typing import Dict, List
@@ -23,26 +15,15 @@ from app_types import GENRE_DESCRIPTIONS, ModelType, MovieGenre
 
 class MessageHandler:
     """
-    Что я делаю?
-        Управляю состоянием выбора пользователя и выдачей рекомендаций.
+    Управляет состоянием выбора пользователя и выдачей рекомендаций
 
-    Что я принимаю на вход?
+    Args:
         Update и Context.
-
-    Что я возвращаю?
-        None (сообщения отправляются в Telegram).
     """
 
     def __init__(self) -> None:
         """
-        Что я делаю?
-            Инициализирую 2 модели и хранилище выбора пользователя.
-
-        Что я принимаю на вход?
-            Ничего.
-
-        Что я возвращаю?
-            None
+        Инициализирует 2 модели и хранилище выбора пользователя
         """
         self.gpt_model: GPTModel = GPTModel()
         self.llama_model: LLaMAModel = LLaMAModel()
@@ -52,33 +33,25 @@ class MessageHandler:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ) -> None:
         """
-        Что я делаю?
-            Приветствую и предлагаю выбрать модель.
+        Бот начинает работу и предлагает выбор моделей
 
-        Что я принимаю на вход?
+        Args:
             update: Update
             context: ContextTypes.DEFAULT_TYPE
-
-        Что я возвращаю?
-            None
         """
         keyboard: List[List[InlineKeyboardButton]] = [
+            [InlineKeyboardButton("GPT (Llama-3.1) (HF)", callback_data="model_gpt")],
             [
                 InlineKeyboardButton(
-                    "🧠 GPT (Llama-3.1) (HF)", callback_data="model_gpt"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    "🦙 LLaMA-3.1-8B Instruct (HF)", callback_data="model_llama"
+                    "LLaMA-3.1-8B Instruct (HF)", callback_data="model_llama"
                 )
             ],
         ]
         reply_markup: InlineKeyboardMarkup = InlineKeyboardMarkup(keyboard)
 
         text: str = (
-            "🎬 Привет! Это бот-рекомендатель фильмов.\n\n"
-            "Сначала выбери модель (по методичке):\n"
+            "Привет. Это бот, рекомендующий фильмы .\n\n"
+            "Сначала выбери модель:\n"
             "1) GPT-класс: Llama-3.1-8B-Instruct (через Router API)\n"
             "2) LLaMA-класс: Llama-3.1-8B-Instruct"
         )
@@ -88,15 +61,11 @@ class MessageHandler:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ) -> None:
         """
-        Что я делаю?
-            Сохраняю выбранную модель и предлагаю выбрать жанр.
+        Сохраняет выбранную модель и предлагает выбрать жанр
 
-        Что я принимаю на вход?
+        Args:
             update: Update
             context: ContextTypes.DEFAULT_TYPE
-
-        Что я возвращаю?
-            None
         """
         query = update.callback_query
         await query.answer()
@@ -114,7 +83,7 @@ class MessageHandler:
         ]
 
         await query.edit_message_text(
-            text="✅ Модель выбрана. Теперь выбери жанр кино:",
+            text="Модель выбрана. Теперь выбери жанр:",
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
 
@@ -122,15 +91,11 @@ class MessageHandler:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ) -> None:
         """
-        Что я делаю?
-            Сохраняю жанр, формирую промпт и вызываю выбранную HF-модель асинхронно.
+        Сохраняет жанр, формирую промпт и вызывает выбранную модель
 
-        Что я принимаю на вход?
+        Args:
             update: Update
             context: ContextTypes.DEFAULT_TYPE
-
-        Что я возвращаю?
-            None
         """
         query = update.callback_query
         await query.answer()
@@ -145,45 +110,24 @@ class MessageHandler:
         selected_model: str = self.user_choices[user_id].get("model", ModelType.GPT)
 
         await query.edit_message_text(
-            "⏳ Генерирую рекомендацию через Hugging Face Inference API..."
+            "Генерирую рекомендацию через Hugging Face Inference API..."
         )
 
         genre_desc: str = GENRE_DESCRIPTIONS[selected_genre]
         user_prompt: str = (
             f"Порекомендуй один {genre_desc}.\n"
-            "Укажи название (год), актеров, краткий сюжет (2-3 предложения) и почему стоит смотреть."
+            "Укажи название (год), актеров, кратко опиши сюжет (2-3 предложения) и почему стоит смотреть."
         )
 
         try:
             if selected_model == ModelType.GPT:
                 response: str = await self.gpt_model.generate_response(user_prompt)
-                prefix: str = "🧠 Ответ GPT (HF):"
+                prefix: str = "Ответ GPT:"
             else:
                 response: str = await self.llama_model.generate_response(user_prompt)
-                prefix: str = "🦙 Ответ LLaMA-3.1 (HF):"
+                prefix: str = "Ответ LLaMA-3.1:"
 
             await query.edit_message_text(f"{prefix}\n\n{response}")
 
         except Exception as e:
             await query.edit_message_text(f"❌ Ошибка генерации: {e}")
-
-    async def help_command_handler(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ) -> None:
-        """
-        Что я делаю?
-            Показываю справку по боту.
-
-        Что я принимаю на вход?
-            update: Update
-            context: ContextTypes.DEFAULT_TYPE
-
-        Что я возвращаю?
-            None
-        """
-        await update.message.reply_text(
-            "Команды:\n"
-            "/start — начать\n"
-            "/help — справка\n\n"
-            "Алгоритм: /start → выбрать модель → выбрать жанр → получить рекомендацию."
-        )

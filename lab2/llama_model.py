@@ -1,14 +1,5 @@
 """
-Модуль "LLaMA" по методичке: Llama-3.1-8B-Instruct (через HF Router API).
-
-Что я делаю?
-    Генерирую рекомендации фильмов, используя модель LLaMA-класса из методички.
-
-Что я принимаю на вход?
-    - Промпт пользователя (str)
-
-Что я возвращаю?
-    - Сгенерированный ответ (str)
+Модуль "LLaMA": Llama-3.1-8B-Instruct. Генерирует рекомендации фильмов.
 """
 
 from typing import Any, Dict
@@ -28,9 +19,17 @@ class LLaMAModel:
         self.model_id: str = HF_MODEL_ID_LLAMA
 
     async def generate_response(self, user_prompt: str) -> str:
+        """Генерирует рекомендацию фильма на основе запроса.
+
+        Args:
+            user_prompt: Текст запроса пользователя
+
+        Returns:
+            Строка с ответом модели в формате текстовой рекомендации фильма.
+        """
         system_prompt: str = (
             "You are a movie expert assistant. Answer in Russian. "
-            "Recommend one real movie with: Название (год), Актеры, Сюжет, Почему стоит смотреть."
+            "Recommend one real movie with: Название (год), актеры, сюжет, почему стоит смотреть"
         )
         return await self.client.chat_complete(
             model_id=self.model_id,
