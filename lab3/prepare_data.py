@@ -10,14 +10,13 @@ RatingTriplet = Tuple[int, int, float]
 
 def parse_movielens_u_data(u_data_path: str) -> List[RatingTriplet]:
     """
-    Что я делаю?
-        Читаю файл MovieLens 100k u.data и преобразую его в список триплетов рейтингов.
+    Читает файл с данными (u.data) и преобразует его в список триплетов рейтингов
 
-    Что я принимаю на вход?
+    Args:
         u_data_path: Путь к файлу u.data.
 
-    Что я возвращаю?
-        Список (user_id, movie_id, rating).
+    Returns:
+        List (user_id, movie_id, rating).
     """
     ratings: List[RatingTriplet] = []
 
@@ -37,14 +36,13 @@ def parse_movielens_u_data(u_data_path: str) -> List[RatingTriplet]:
 
 def parse_movielens_u_item(u_item_path: str) -> Dict[int, str]:
     """
-    Что я делаю?
-        Читаю файл MovieLens 100k u.item и строю словарь movie_id -> movie_title.
+    Читает файл с данными (u.item) и строит словарь movie_id -> movie_title
 
-    Что я принимаю на вход?
-        u_item_path: Путь к файлу u.item.
+    Args:
+        u_item_path: Путь к файлу u.item
 
-    Что я возвращаю?
-        Словарь {movie_id: movie_title}.
+    Returns:
+        Dict {movie_id: movie_title}
     """
     movie_titles: Dict[int, str] = {}
 
@@ -63,15 +61,11 @@ def parse_movielens_u_item(u_item_path: str) -> Dict[int, str]:
 
 def save_ratings_json(output_path: str, ratings: List[RatingTriplet]) -> None:
     """
-    Что я делаю?
-        Сохраняю рейтинги в JSON в формате, удобном для бота.
+    Сохраняет рейтинги в JSON в формате
 
-    Что я принимаю на вход?
-        output_path: Куда сохранять JSON.
-        ratings: Список (user_id, movie_id, rating).
-
-    Что я возвращаю?
-        Ничего (None).
+    Args:
+        output_path: Куда сохранять JSON
+        ratings: Список (user_id, movie_id, rating)
     """
     payload: List[Dict[str, float | int]] = [
         {"user_id": user_id, "item_id": movie_id, "rating": rating}
@@ -83,15 +77,11 @@ def save_ratings_json(output_path: str, ratings: List[RatingTriplet]) -> None:
 
 def save_movies_json(output_path: str, movies: Dict[int, str]) -> None:
     """
-    Что я делаю?
-        Сохраняю словарь movie_id -> title в JSON.
+    Сохраняет словарь movie_id -> title в JSON
 
-    Что я принимаю на вход?
-        output_path: Куда сохранять.
-        movies: Словарь {movie_id: title}.
-
-    Что я возвращаю?
-        Ничего (None).
+    Args:
+        output_path: Куда сохранять
+        movies: Словарь {movie_id: title}
     """
     with open(output_path, "w", encoding="utf-8") as file:
         json.dump(movies, file, ensure_ascii=False, indent=2)
@@ -99,14 +89,7 @@ def save_movies_json(output_path: str, movies: Dict[int, str]) -> None:
 
 def main() -> None:
     """
-    Что я делаю?
-        Конвертирую MovieLens 100k (u.data + u.item) в ratings.json и movies.json.
-
-    Что я принимаю на вход?
-        None (пути берутся из переменных ниже).
-
-    Что я возвращаю?
-        Ничего (None).
+    Конвертируеет u.data и u.item в ratings.json и movies.json.
     """
     u_data_path: str = os.getenv("ML_U_DATA", "data/ml-100k/u.data")
     u_item_path: str = os.getenv("ML_U_ITEM", "data/ml-100k/u.item")

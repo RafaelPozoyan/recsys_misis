@@ -12,15 +12,14 @@ def calculate_cosine_similarity(
     ratings_vector_b: Dict[int, float],
 ) -> float:
     """
-    Что я делаю?
-        Считаю косинусное сходство между двумя векторами оценок (User-Based CF).
+    Считает косинусное сходство между двумя векторами оценок -- User-Based CF
 
-    Что я принимаю на вход?
-        ratings_vector_a: Вектор оценок A в виде {item_id: rating}.
-        ratings_vector_b: Вектор оценок B в виде {item_id: rating}.
+    Args:
+        ratings_vector_a: Вектор оценок A в виде {item_id: rating}
+        ratings_vector_b: Вектор оценок B в виде {item_id: rating}
 
-    Что я возвращаю?
-        Значение косинусного сходства в диапазоне [0..1] (в этом контексте).
+    Returns:
+        Значение косинусного сходства в диапазоне [0..1]
     """
     common_item_ids: set[int] = set(ratings_vector_a.keys()) & set(
         ratings_vector_b.keys()
@@ -45,14 +44,13 @@ def calculate_cosine_similarity(
 @dataclass(frozen=True)
 class Recommendation:
     """
-    Что я делаю?
-        Храню одну рекомендацию: какой item_id рекомендовать и с каким score.
+    Хранbn одну рекомендацию: какой item_id рекомендовать и с каким score
 
-    Что я принимаю на вход?
-        item_id: ID объекта.
-        score: Предсказанная оценка/скор.
+    Args:
+        item_id: ID объекта
+        score: Предсказанная оценка
 
-    Что я возвращаю?
+    Returns:
         Экземпляр Recommendation.
     """
 
@@ -67,14 +65,10 @@ class UserBasedCosineCF:
 
     def __init__(self, ratings: List[RatingTriplet]) -> None:
         """
-        Что я делаю?
-            Строю структуру user->(item->rating) из входных триплетов.
+            Строит структуру user->(item->rating) из входных триплетов.
 
-        Что я принимаю на вход?
+        Args:
             ratings: Список (user_id, item_id, rating).
-
-        Что я возвращаю?
-            Ничего (None).
         """
         self.user_item_ratings: Dict[int, Dict[int, float]] = {}
         for user_id, item_id, rating in ratings:
@@ -84,13 +78,12 @@ class UserBasedCosineCF:
 
     def _get_user_vector(self, user_id: int) -> Dict[int, float]:
         """
-        Что я делаю?
-            Возвращаю вектор оценок пользователя.
+        Возвращает вектор оценок пользователя
 
-        Что я принимаю на вход?
+        Args:
             user_id: ID пользователя.
 
-        Что я возвращаю?
+        Returns:
             Словарь {item_id: rating}.
         """
         return self.user_item_ratings.get(user_id, {})
@@ -99,15 +92,14 @@ class UserBasedCosineCF:
         self, target_user_id: int, top_k: int
     ) -> List[Tuple[int, float]]:
         """
-        Что я делаю?
-            Ищу top_k самых похожих пользователей на target_user_id по cosine similarity.
+        Ищет top_k самых похожих пользователей на target_user_id по косиносному сходству
 
-        Что я принимаю на вход?
-            target_user_id: ID пользователя, для которого ищем соседей.
-            top_k: Сколько соседей вернуть.
+        Args:
+            target_user_id: ID пользователя
+            top_k: Сколько соседей вернуть
 
-        Что я возвращаю?
-            Список (user_id, similarity) по убыванию similarity.
+        Returns:
+            Список (user_id, similarity) по убыванию сходства
         """
         target_vector: Dict[int, float] = self._get_user_vector(target_user_id)
         if not target_vector:
@@ -132,17 +124,16 @@ class UserBasedCosineCF:
         min_similarity: float = 1e-9,
     ) -> List[Recommendation]:
         """
-        Что я делаю?
-            Рекомендую пользователю items, которые он не оценивал, на основе оценок похожих пользователей.
+        Рекомендует пользователю фильмы, которые он не оценивал
 
-        Что я принимаю на вход?
-            target_user_id: ID пользователя.
-            neighbors_k: Сколько похожих пользователей учитывать.
-            recommendations_k: Сколько рекомендаций вернуть.
-            min_similarity: Порог, ниже которого сосед отбрасывается.
+        Args:
+            target_user_id: id пользователя
+            neighbors_k: Сколько похожих пользователей учитывать
+            recommendations_k: Сколько рекомендаций вернуть
+            min_similarity: Порог, ниже которого сосед отбрасывается
 
-        Что я возвращаю?
-            Список Recommendation (item_id, score), отсортированный по score.
+        Returns:
+            Список Recommendation (item_id, score), отсортированный по оценке
         """
         target_vector: Dict[int, float] = self._get_user_vector(target_user_id)
         if not target_vector:

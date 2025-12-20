@@ -9,14 +9,13 @@ RatingTriplet = Tuple[int, int, float]
 
 def load_ratings(file_path: str) -> List[RatingTriplet]:
     """
-    Что я делаю?
-        Загружаю оценки пользователей из JSON-файла.
+    Загружает оценки пользователей из json-файла
 
-    Что я принимаю на вход?
-        file_path: Путь к файлу.
+    Args:
+        file_path: Путь к файлу
 
-    Что я возвращаю?
-        Список (user_id, item_id, rating).
+    Returns:
+        Список (user_id, item_id, rating)
     """
     if not os.path.exists(file_path):
         return []
@@ -33,15 +32,11 @@ def load_ratings(file_path: str) -> List[RatingTriplet]:
 
 def save_ratings(file_path: str, ratings: List[RatingTriplet]) -> None:
     """
-    Что я делаю?
-        Сохраняю оценки пользователей в JSON-файл.
+    Сохраняет оценки пользователей в json-файл
 
-    Что я принимаю на вход?
-        file_path: Путь к файлу.
-        ratings: Список (user_id, item_id, rating).
-
-    Что я возвращаю?
-        Ничего (None).
+    Args:
+        file_path: Путь к файлу
+        ratings: Список (user_id, item_id, rating)
     """
     payload: List[Dict[str, object]] = [
         {"user_id": user_id, "item_id": item_id, "rating": rating}
@@ -59,17 +54,16 @@ def upsert_rating(
     rating: float,
 ) -> List[RatingTriplet]:
     """
-    Что я делаю?
-        Добавляю новую оценку или обновляю существующую оценку пользователя для item_id.
+    Добавляет новую оценку или обновляет существующую для item_id
 
-    Что я принимаю на вход?
-        ratings: Текущий список оценок.
-        user_id: ID пользователя.
-        item_id: ID объекта.
-        rating: Оценка.
+    Args:
+        ratings: Текущий список оценок
+        user_id: ID пользователя
+        item_id: ID объекта
+        rating: Оценка
 
-    Что я возвращаю?
-        Новый список оценок с обновлением.
+    Return:
+        updated_ratings: Новый список оценок с обновлением
     """
     updated_ratings: List[RatingTriplet] = []
     was_updated: bool = False
